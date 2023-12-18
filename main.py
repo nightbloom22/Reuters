@@ -4,20 +4,23 @@ from sklearn.linear_model import Perceptron
 from sklearn.svm import SVC
 import utils
 
-target_topics = ['earn', 'acq', 'money-fx', 'crude', 'grain', 'trade', 'interest', 'ec', 'wheat', 'ship']
+#target_topics = ['earn', 'acq', 'money-fx', 'crude', 'grain', 'trade', 'interest', 'ec', 'wheat', 'ship']
+target_topics = ['earn', 'acq', 'money-fx', 'crude', 'grain']
+target_places = ['usa', 'australia']
 dict_topics = \
     {
     'earn': 1,
     'acq': 2,
     'money-fx': 3,
     'crude': 4,
-    'grain': 5,
-    'trade': 6,
-    'interest': 7,
-    'ec': 8,
-    'wheat': 9,
-    'ship': 10
+    'grain': 5
+    # 'trade': 6,
+    # 'interest': 7,
+    # 'ec': 8,
+    # 'wheat': 9,
+    # 'ship': 10
     }
+
 
 types = ['training-set', 'published-testset']
 
@@ -74,8 +77,40 @@ def train_bert(ref_docs):
     print(classification_report(y_true, y_predicted))
 
 
+def train_multilabel(ref_docs):
+    from sklearn.multioutput import MultiOutputClassifier
+    from sklearn.linear_model import LogisticRegression
+    import utils_multilabel
+    from utils_multilabel import filter_docs, get_most_important_topics, get_most_important_places,\
+        obtain_topic_tags, obtain_place_tags
+
+    topics = obtain_topic_tags()
+    places = obtain_place_tags()
+    target_topics = get_most_important_topics(ref_docs, places)
+    target_places = get_most_important_places(ref_docs, topics)
+
+    docs = filter_docs(ref_docs, target_topics, target_places, types)
+
+    x_train, y_train, vectorizer = utils_multilabel.create_vectorized_data(docs, "training-set", target_topics,
+                                                               target_places, 'CountVectorizer')
+    corpus_test, y_test = utils_multilabel.create_vectorized_data(docs, "published-testset", target_topics,
+                                                                target_places, 'CountVectorizer')
+    x_test = vectorizer.transform(corpus_test)
+
+
+    clf = MultiOutputClassifier(LogisticRegression(max_iter = 1000)).fit(x_train, y_train)
+
+    pred = clf.predict(x_test)
+
+    from sklearn.metrics import accuracy_score
+    print('Accuracy Score: ', accuracy_score(y_test, pred))
+
+    from sklearn.metrics import hamming_loss
+    print('Hamming Loss: ', round(hamming_loss(y_test, pred), 2))
+
+
 def main(model):
-    #start_time = time.time()
+
     # Create the list of Reuters data and create the parser
     files = ["data/reut2-%03d.sgm" % r for r in range(0, 22)]
     parser = ReutersParser()
@@ -86,8 +121,9 @@ def main(model):
         for d in parser.parse(open(fn, 'rb')):
             docs.append(d)
 
-    places = utils.obtain_place_tags()
+    print(docs[0:2])
 
+    places = utils.obtain_place_tags()
     topics = utils.get_most_important_topics(docs, places)
     ref_docs = utils.filter_doc_list_through_topics_train_test(topics, types, docs)
 
@@ -95,7 +131,11 @@ def main(model):
         train_perceptron(ref_docs)
     elif model == 'bert':
         train_bert(ref_docs)
+    elif model == 'multi_label':
+
+        train_multilabel(docs)
 
 
 if __name__ == "__main__":
-    main(model='bert')
+    main(model='multi_label')
+

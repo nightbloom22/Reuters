@@ -14,31 +14,6 @@ def obtain_topic_tags():
     return topics
 
 
-def filter_doc_list_through_topics_train_test(topics, types, docs):
-    """
-    Reads all of the documents and creates a new list of two-tuples
-    that contain a single feature entry and the body text, instead of
-    a list of topics. It removes all geographic features and only
-    retains those documents which have at least one non-geographic topic.
-    """
-    ref_docs = []
-
-    for d in docs:
-
-        if d[0] == [] or d[0] == "":
-            continue
-        if str(d[2]) not in types:
-            continue
-        labels = d[0]
-
-        for label in labels:
-            if label in topics:
-                d_tup = (label, d[1], d[2])
-                ref_docs.append(d_tup)
-                break
-    return ref_docs
-
-
 def obtain_place_tags():
     """
     Open the topic list file and import all of the topic names taking care to strip the trailing "\n" from each word.
@@ -69,6 +44,31 @@ def get_most_important_topics(docs, places):
     return topics
 
 
+def filter_doc_list_through_topics_train_test(topics, types, docs):
+    """
+    Reads all of the documents and creates a new list of two-tuples
+    that contain a single feature entry and the body text, instead of
+    a list of topics. It removes all geographic features and only
+    retains those documents which have at least one non-geographic topic.
+    """
+    ref_docs = []
+
+    for d in docs:
+
+        if d[0] == [] or d[0] == "":
+            continue
+        if str(d[2]) not in types:
+            continue
+        labels = d[0]
+
+        for label in labels:
+            if label in topics:
+                d_tup = (label, d[1], d[2])
+                ref_docs.append(d_tup)
+                break
+    return ref_docs
+
+
 def create_vectorized_data(docs, doc_type, dict_topics, vectorizer):
     """
     Creates a document corpus list (by stripping out the
@@ -79,6 +79,15 @@ def create_vectorized_data(docs, doc_type, dict_topics, vectorizer):
     the corpus token/feature matrix (X).
     """
     docs = [doc for doc in docs if doc[2] == doc_type]
+
+
+    # import category_encoders as ce
+    # ohe_y = ce.OneHotEncoder(use_cat_names=True, handle_unknown='ignore')
+    # y_ = [d[0] for d in docs]
+    # y = ohe_y.fit_transform(y_)
+    #
+    # print(y_)
+    # print(y)
 
     y_ = [d[0] for d in docs]
     y = pd.DataFrame(y_, columns=['y_'])
