@@ -1,38 +1,4 @@
 
-# from parser import ReutersParser
-# import utils
-# dict_topics = \
-#     {
-#     'earn': 1,
-#     'acq': 2,
-#     'money-fx': 3,
-#     'crude': 4,
-#     'grain': 5,
-#     'trade': 6,
-#     'interest': 7,
-#     'ec': 8,
-#     'wheat': 9,
-#     'ship': 10
-#     }
-#
-# types = ['training-set', 'published-testset']
-# files = ["data/reut2-%03d.sgm" % r for r in range(0, 22)]
-# parser = ReutersParser()
-#
-# print("Parsing training data...\n")
-# docs = []
-# for fn in files:
-#     for d in parser.parse(open(fn, 'rb')):
-#         docs.append(d)
-#
-# places = utils.obtain_place_tags()
-#
-# topics = utils.get_most_important_topics(docs, places)
-# print('--topics--', topics)
-#
-# ref_docs = utils.filter_doc_list_through_topics_train_test(topics, types, docs)
-
-
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
@@ -101,7 +67,7 @@ def build_model():
     model.layers[2].trainable = True
 
     optimizer = Adam(
-        learning_rate=5e-05, # this learning rate is for bert model , taken from huggingface website
+        learning_rate=5e-05,
         epsilon=1e-08,
         # decay=0.01,
         clipnorm=1.0)
@@ -114,28 +80,4 @@ def build_model():
         loss = loss,
         metrics = metric)
     return model
-
-
-# x_train, y_train, x_test, y_test, test_df = prepare_tf_data(ref_docs)
-# model = build_model()
-# train_history = model.fit(
-#     x ={'input_ids':x_train['input_ids'],'attention_mask':x_train['attention_mask']} ,
-#     y = y_train,
-#     validation_data = (
-#     {'input_ids':x_test['input_ids'],'attention_mask':x_test['attention_mask']}, y_test
-#     ),
-#   epochs=1,
-#     batch_size=36
-# )
-#
-# import numpy as np
-#
-# predicted_raw = model.predict({'input_ids':x_test['input_ids'],'attention_mask':x_test['attention_mask']})
-# y_predicted = np.argmax(predicted_raw, axis = 1)
-# y_true = test_df.topic_d
-#
-# from sklearn.metrics import classification_report
-# print(classification_report(y_true, y_predicted))
-
-
 
